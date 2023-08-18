@@ -14,6 +14,12 @@ std::string removeHyphensAndSpaces(const std::string& input)
     return result;
 }
 
+// Основной алгоритм для замены выражений
+std::string changeFormat()
+{
+    return 0;
+}
+
 int main()
 {
     setlocale(LC_ALL, "ru");
