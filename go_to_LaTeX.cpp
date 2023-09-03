@@ -71,6 +71,13 @@ std::string DecodeNumber(std::string str) {
         }
     }
 
+    if (num < 0 && primeFactors.size() > 1) {
+        return "-(" + analyticalRepresentation + ")";
+    }
+    else if (num < 0) {
+        return "-" + analyticalRepresentation;
+    }
+
     return analyticalRepresentation;
 }
 
@@ -217,8 +224,7 @@ void go_to_LaTeX(std::string str)
     }
 }
 
-int main()
-{
+int main() {
     setlocale(LC_ALL, "ru");
 
     // Исходная строка
