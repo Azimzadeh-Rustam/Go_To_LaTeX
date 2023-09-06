@@ -6,7 +6,7 @@
 
 using namespace std;
 
-std::string removeHyphensAndSpaces(const std::string& input)
+std::string Remove_Hyphens_And_Spaces(const std::string& input)
 {
     std::string result = input;
     result.erase(std::remove_if(result.begin(), result.end(), [](char c) {
@@ -15,16 +15,8 @@ std::string removeHyphensAndSpaces(const std::string& input)
     return result;
 }
 
-
-// Функция для нахождения наибольшего общего делителя (НОД)
-int gcd(int a, int b) {
-    if (b == 0)
-        return a;
-    return gcd(b, a % b);
-}
-
 // Функция для декодирования числа в аналитическое представление
-std::string DecodeNumber(std::string str) {
+std::string Decode_Number(std::string str) {
 
     if (str == "") {
         return "";
@@ -81,10 +73,10 @@ std::string DecodeNumber(std::string str) {
     return analyticalRepresentation;
 }
 
-void go_to_LaTeX(std::string str)
+void Go_To_LaTeX(std::string str)
 {
 
-    str = removeHyphensAndSpaces(str);
+    str = Remove_Hyphens_And_Spaces(str);
 
     // Регулярные выражения для поиска
     std::vector<std::string> search_patterns = {
@@ -171,10 +163,10 @@ void go_to_LaTeX(std::string str)
                     std::string argument2;
                     if (i == 1 || i == 3 || i == 4 || i == 5 || i == 6) {
                         argument1 = result[2];
-                        argument2 = DecodeNumber(result[4]);
+                        argument2 = Decode_Number(result[4]);
                     }
                     else {
-                        argument1 = DecodeNumber(result[2]);
+                        argument1 = Decode_Number(result[2]);
                         argument2 = result[4];
                     }
                     // Массив, элементы которого представляют из себя значения на которые нужно заменить аргументы в шаблоне LaTeX
@@ -209,7 +201,7 @@ void go_to_LaTeX(std::string str)
     }
 
     // Вывод преобразованного кода
-    std::cout << "Формат LaTeX:\n" << "$" + str + "$" << "\n" << std::endl;
+    std::cout << "Формат LaTeX:\n" << "$" + str + "$\n" << std::endl;
 
     //Вывод количества замен
     std::cout << "Количество замен: " << count << "\n" << std::endl;
@@ -230,7 +222,7 @@ int main() {
     // Исходная строка
     std::string programFormat = "-1/2*e^-2*F#_1^1{-1}*F_1_2{1}*I{2^-4}*K5^-1{2}";
 
-    go_to_LaTeX(programFormat);
+    Go_To_LaTeX(programFormat);
 
     return 0;
 }
