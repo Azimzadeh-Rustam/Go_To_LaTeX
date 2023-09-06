@@ -73,13 +73,13 @@ std::string Decode_Number(std::string str) {
     return analyticalRepresentation;
 }
 
-void Go_To_LaTeX(std::string str)
-{
+void Go_To_LaTeX(std::string str) {
 
-    str = Remove_Hyphens_And_Spaces(str);
+    int count = 0; // Счетчик замен
+    std::vector<std::string> warnings; // Вектор для хранения названия выражений, которые не были найдены в исходной строке
 
     // Регулярные выражения для поиска
-    std::vector<std::string> search_patterns = {
+    std::vector<std::string> searchPatterns = {
         "\\*",
         "(e\\^)([+-]?\\d+)",
         "(d_\\{)([\\w-]+)(\\}\\{)([\\w-]+)(\\})",
@@ -96,7 +96,7 @@ void Go_To_LaTeX(std::string str)
     };
 
     // Шаблоны LaTeX
-    std::vector<std::string> LaTeX_samples = {
+    std::vector<std::string> LaTeXSamples = {
         "\\cdot",
         "{e}^{argument1}",
         "{\\delta}^8_{argument2}\\left(argument1\\right)",
@@ -129,15 +129,14 @@ void Go_To_LaTeX(std::string str)
         "Констант типа 5"
     };
 
-    std::vector<std::string> warnings; // Вектор для хранения предупреждений
-    int count = 0; // Счетчик замен 
+    str = Remove_Hyphens_And_Spaces(str);
 
-    for (int i = 0; i < search_patterns.size(); i++) {
+    for (int i = 0; i < searchPatterns.size(); i++) {
         std::vector<std::string> expressions; // Вектор для хранения найденных выражений
-        std::vector<std::string> LaTeX_expressions; //Вектор для хранения найденных выражений в формате LaTeX
+        std::vector<std::string> LaTeXExpressions; //Вектор для хранения найденных выражений в формате LaTeX
         size_t pos = 0;
         std::cmatch result; // Эта переменная после выполнения кода будет представлять из себя массив, нулевой элемент которого будет самим найденным выражением, а все остальные - соответствовать разбиениям в регулярном выражении
-        std::regex regular(search_patterns[i]); //Регулярное выражение
+        std::regex regular(searchPatterns[i]); //Регулярное выражение
         std::sregex_iterator regex_iterator(str.begin(), str.end(), regular); // Итератор для поска всех заданных выражений
 
         // Перебор всех заданных выражений и добавьте их в вектор expressions
@@ -151,11 +150,11 @@ void Go_To_LaTeX(std::string str)
             std::sort(expressions.begin(), expressions.end()); // Сортируем вектор expressions, чтобы группировать повторяющиеся элементы
             expressions.erase(std::unique(expressions.begin(), expressions.end()), expressions.end()); // Удаляем дубликаты
 
-            // Создание LaTeX синтаксиса для заданных выражений и запись их в вектор LaTeX_expressions
+            // Создание LaTeX синтаксиса для заданных выражений и запись их в вектор LaTeXExpressions
             for (int j = 0; j < expressions.size(); j++) {
 
                 if (std::regex_search(expressions[j].c_str(), result, regular)) {
-                    std::string LaTeX_template = LaTeX_samples[i];
+                    std::string LaTeXTemplate = LaTeXSamples[i];
                     // Массив, элементы которого представляют из себя аргументы в шаблоне LaTeX которые нужно заменить
                     std::string params[]{ "argument1", "argument2" };
 
@@ -170,18 +169,18 @@ void Go_To_LaTeX(std::string str)
                         argument2 = result[4];
                     }
                     // Массив, элементы которого представляют из себя значения на которые нужно заменить аргументы в шаблоне LaTeX
-                    std::string new_params[]{ argument1, argument2 };
+                    std::string newParams[]{ argument1, argument2 };
 
                     // Подстановка значений в соответствующие аргументы в шаблоне LaTeX
                     for (int k = 0; k < std::size(params); k++) {
                         pos = 0;
-                        while ((pos = LaTeX_template.find(params[k], pos)) != std::string::npos) {
-                            LaTeX_template.replace(pos, params[k].length(), new_params[k]);
-                            pos += new_params[k].length();
+                        while ((pos = LaTeXTemplate.find(params[k], pos)) != std::string::npos) {
+                            LaTeXTemplate.replace(pos, params[k].length(), newParams[k]);
+                            pos += newParams[k].length();
                         }
                     }
-                    // Запись полученных LaTeX выражений в вектор LaTeX_expressions
-                    LaTeX_expressions.push_back(LaTeX_template);
+                    // Запись полученных LaTeX выражений в вектор LaTeXExpressions
+                    LaTeXExpressions.push_back(LaTeXTemplate);
                 }
             }
 
@@ -189,8 +188,8 @@ void Go_To_LaTeX(std::string str)
             for (int n = 0; n < std::size(expressions); n++) {
                 pos = 0;
                 while ((pos = str.find(expressions[n], pos)) != std::string::npos) {
-                    str.replace(pos, expressions[n].length(), LaTeX_expressions[n]);
-                    pos += LaTeX_expressions[n].length();
+                    str.replace(pos, expressions[n].length(), LaTeXExpressions[n]);
+                    pos += LaTeXExpressions[n].length();
                     count++;
                 }
             }
@@ -200,13 +199,11 @@ void Go_To_LaTeX(std::string str)
         }
     }
 
-    // Вывод преобразованного кода
+    // Выводы
     std::cout << "Формат LaTeX:\n" << "$" + str + "$\n" << std::endl;
 
-    //Вывод количества замен
     std::cout << "Количество замен: " << count << "\n" << std::endl;
 
-    // Вывод предупреждений
     int warningsSize = warnings.size();
     if (warningsSize > 0) {
         std::cout << "В исходном коде не было найдено:\n";
