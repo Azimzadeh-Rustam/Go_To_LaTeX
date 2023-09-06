@@ -6,12 +6,21 @@
 
 using namespace std;
 
-std::string Remove_Hyphens_And_Spaces(const std::string& input)
-{
+std::string Remove_Hyphens_And_Spaces(const std::string& input) {
     std::string result = input;
     result.erase(std::remove_if(result.begin(), result.end(), [](char c) {
         return std::isspace(c);
         }), result.end());
+    return result;
+}
+
+std::string Replace_Stars_With_cdots(const std::string& input) {
+    std::string result = input;
+    size_t pos = result.find('*');
+    while (pos != std::string::npos) {
+        result.replace(pos, 1, "\\cdot");
+        pos = result.find('*', pos + 1);
+    }
     return result;
 }
 
@@ -80,7 +89,6 @@ void Go_To_LaTeX(std::string str) {
 
     // Регулярные выражения для поиска
     std::vector<std::string> searchPatterns = {
-        "\\*",
         "(e\\^)([+-]?\\d+)",
         "(d_\\{)([\\w-]+)(\\}\\{)([\\w-]+)(\\})",
         "(F_)([\\w-]+)([\\^_]+[\\w-]+\\{)([\\w-]+)(\\})",
@@ -97,7 +105,6 @@ void Go_To_LaTeX(std::string str) {
 
     // Шаблоны LaTeX
     std::vector<std::string> LaTeXSamples = {
-        "\\cdot",
         "{e}^{argument1}",
         "{\\delta}^8_{argument2}\\left(argument1\\right)",
         "{\\phi}_{argument1}\\left(argument2,\\theta\\right)",
@@ -114,7 +121,6 @@ void Go_To_LaTeX(std::string str) {
 
     // Названия
     std::vector<std::string> designations = {
-        "Умножений",
         "Констант связи",
         "Дельта функции",
         "Киральных полей",
@@ -130,6 +136,7 @@ void Go_To_LaTeX(std::string str) {
     };
 
     str = Remove_Hyphens_And_Spaces(str);
+    str = Replace_Stars_With_cdots(str);
 
     for (int i = 0; i < searchPatterns.size(); i++) {
         std::vector<std::string> expressions; // Вектор для хранения найденных выражений
@@ -160,7 +167,7 @@ void Go_To_LaTeX(std::string str) {
 
                     std::string argument1;
                     std::string argument2;
-                    if (i == 1 || i == 3 || i == 4 || i == 5 || i == 6) {
+                    if (i == 0 || i == 2 || i == 3 || i == 4 || i == 5) {
                         argument1 = result[2];
                         argument2 = Decode_Number(result[4]);
                     }
@@ -202,7 +209,7 @@ void Go_To_LaTeX(std::string str) {
     // Выводы
     std::cout << "Формат LaTeX:\n" << "$" + str + "$\n" << std::endl;
 
-    std::cout << "Количество замен: " << count << "\n" << std::endl;
+    std::cout << "Заменено выражений: " << count << "\n" << std::endl;
 
     int warningsSize = warnings.size();
     if (warningsSize > 0) {
