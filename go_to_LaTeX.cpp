@@ -24,16 +24,20 @@ std::string Replace_Stars_With_Cdots(const std::string& input) {
     return result;
 }
 
-std::string Decode_Number(std::string str) {
+std::string Decode_Number(std::string str, std::string argument, int position) {
 
     if (str == "") {
         return "";
     }
+    else if (str == "1" || str == "-1") {
+        return "0";
+    }
 
     int num = std::stoi(str);
+    bool isEven;
 
-    if (num == 1 || num == -1) {
-        return "0";
+    if (argument != "") {
+        isEven = std::stoi(argument) % 2 == 0;
     }
 
     // Encoding variables and their values as pairs (variable, code)
@@ -59,8 +63,9 @@ std::string Decode_Number(std::string str) {
     }
 
     // Generating an analytical view as a string
+    int primeFactorsSize = primeFactors.size();
     std::string analyticalRepresentation;
-    for (size_t i = 0; i < primeFactors.size(); ++i) {
+    for (size_t i = 0; i < primeFactorsSize; ++i) {
         char variable;
         for (const auto& pair : variableToCode) {
             if (pair.second == primeFactors[i]) {
@@ -69,19 +74,32 @@ std::string Decode_Number(std::string str) {
             }
         }
         analyticalRepresentation += variable;
-        if (i < primeFactors.size() - 1) {
+        if (i < primeFactorsSize - 1) {
             analyticalRepresentation += " + ";
         }
     }
 
-    if (num < 0 && primeFactors.size() > 1) {
+    if ((position == 6 || position == 7) && isEven && primeFactorsSize > 1) {
+        return "(" + analyticalRepresentation + ")";
+    }
+    else if ((position == 6 || position == 7) && isEven) {
+        return analyticalRepresentation;
+    }
+    else if ((position == 9 || position == 10) && primeFactorsSize > 1) {
+        return "(" + analyticalRepresentation + ")";
+    }
+    else if ((position == 9 || position == 10) && num < 0) {
+        return analyticalRepresentation;
+    }
+    else if (num < 0 && primeFactorsSize > 1) {
         return "-(" + analyticalRepresentation + ")";
     }
     else if (num < 0) {
         return "-" + analyticalRepresentation;
     }
-
-    return analyticalRepresentation;
+    else {
+        return analyticalRepresentation;
+    }
 }
 
 void Go_To_LaTeX(std::string str) {
@@ -91,19 +109,19 @@ void Go_To_LaTeX(std::string str) {
 
     // Regular expressions for searching
     std::vector<std::string> searchPatterns = {
-        "(e\\^)(-?\\d+)",
-        "(d_\\{)(-?\\d+)(\\}\\{)(-?\\d+)(\\})",
-        "(F_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})",
-        "(F#_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})",
-        "(F1_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})",
-        "(V_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})",
-        "(I\\{)(-?\\d+)(\\^-)(\\d+)(\\})",
-        "(I\\{)(-?\\d+)(\\^)(\\d+)(\\})",
-        "(I\\{)(-?\\d+)(_)(-?\\d+)(\\})",
-        "(K2[-_\\^\\d+]*?\\{)(-?\\d+)(\\})",
-        "(K3[-_\\^\\d+]*?\\{)(-?\\d+)(\\})",
-        "(K4[-_\\^\\d+]*?\\{)(-?\\d+)(\\})",
-        "(K5[-_\\^\\d+]*?\\{)(-?\\d+)(\\})"
+        "(e\\^)(-?\\d+)",                              //0
+        "(d_\\{)(-?\\d+)(\\}\\{)(-?\\d+)(\\})",        //1
+        "(F_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})",  //2
+        "(F#_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})", //3
+        "(F1_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})", //4
+        "(V_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})",  //5
+        "(I\\{)(-?\\d+)(\\^-)(\\d+)(\\})",             //6
+        "(I\\{)(-?\\d+)(\\^)(\\d+)(\\})",              //7
+        "(I\\{)(-?\\d+)(_)(-?\\d+)(\\})",              //8
+        "(K2[-_\\^\\d+]*?\\{)(-?\\d+)(\\})",           //9
+        "(K3[-_\\^\\d+]*?\\{)(-?\\d+)(\\})",           //10
+        "(K4[-_\\^\\d+]*?\\{)(-?\\d+)(\\})",           //11
+        "(K5[-_\\^\\d+]*?\\{)(-?\\d+)(\\})"            //12
     };
 
     // LaTeX templates
@@ -175,11 +193,11 @@ void Go_To_LaTeX(std::string str) {
                     // Taking into account the correct order of inserting arguments into LaTeX templates
                     if (i == 0 || i == 2 || i == 3 || i == 4 || i == 5) {
                         argument1 = result[2];
-                        argument2 = Decode_Number(result[4]);
+                        argument2 = Decode_Number(result[4], argument1, i);
                     }
                     else {
-                        argument1 = Decode_Number(result[2]);
                         argument2 = result[4];
+                        argument1 = Decode_Number(result[2], argument2, i);
                     }
                     // An array whose elements represent the values with which to replace the arguments in the LaTeX template
                     std::string newParams[]{ argument1, argument2 };
