@@ -24,7 +24,7 @@ std::string Replace_Stars_With_Cdots(const std::string& input) {
     return result;
 }
 
-std::string Decode_Number(std::string str, std::string argument, int position) {
+std::string Decode_Number(std::string str) {
 
     if (str == "") {
         return "";
@@ -34,20 +34,15 @@ std::string Decode_Number(std::string str, std::string argument, int position) {
     }
 
     int num = std::stoi(str);
-    bool isEven;
-
-    if (argument != "") {
-        isEven = std::stoi(argument) % 2 == 0;
-    }
 
     // Encoding variables and their values as pairs (variable, code)
     std::map<char, int> variableToCode = {
         {'k', 2},
         {'l', 3},
         {'q', 5},
-        {'p', 7},
-        {'m', 11},
-        {'n', 13}
+        {'u', 7},
+        {'s', 11},
+        {'w', 13}
     };
 
     // Factoring a number into prime factors
@@ -79,20 +74,11 @@ std::string Decode_Number(std::string str, std::string argument, int position) {
         }
     }
 
-    if ((position == 6 || position == 7) && isEven && primeFactorsSize > 1) {
-        return "(" + analyticalRepresentation + ")";
-    }
-    else if ((position == 6 || position == 7) && isEven) {
-        return analyticalRepresentation;
-    }
-    else if ((position == 9 || position == 10) && primeFactorsSize > 1) {
-        return "(" + analyticalRepresentation + ")";
-    }
-    else if ((position == 9 || position == 10) && num < 0) {
-        return analyticalRepresentation;
-    }
-    else if (num < 0 && primeFactorsSize > 1) {
+    if (num < 0 && primeFactorsSize > 1) {
         return "-(" + analyticalRepresentation + ")";
+    }
+    else if (num > 0 && primeFactorsSize > 1) {
+        return "(" + analyticalRepresentation + ")";
     }
     else if (num < 0) {
         return "-" + analyticalRepresentation;
@@ -100,6 +86,37 @@ std::string Decode_Number(std::string str, std::string argument, int position) {
     else {
         return analyticalRepresentation;
     }
+}
+
+std::string Add_Puls_Integrals(const std::string& input) {
+    std::string result = input;
+    std::regex patterne("\\{e\\}\\^\\{-?\\d+\\}");
+    std::regex patternk("\\\\frac\\{d\\^4k\\}\\{\\(2\\\\pi\\)\\^4\\}");
+    std::regex patternl("\\\\frac\\{d\\^4l\\}\\{\\(2\\\\pi\\)\\^4\\}");
+    std::regex patternq("\\\\frac\\{d\\^4q\\}\\{\\(2\\\\pi\\)\\^4\\}");
+    std::regex patternu("\\\\frac\\{d\\^4u\\}\\{\\(2\\\\pi\\)\\^4\\}");
+    std::regex patterns("\\\\frac\\{d\\^4s\\}\\{\\(2\\\\pi\\)\\^4\\}");
+
+    if (result.find('k') != std::string::npos) {
+        result = std::regex_replace(result, patterne, "$&\\int{\\frac{d^4k}{(2\\pi)^4}}d^4\\theta");
+    }
+    if (result.find('l') != std::string::npos) {
+        result = std::regex_replace(result, patternk, "$&\\frac{d^4l}{(2\\pi)^4}");
+    }
+    if (result.find('q') != std::string::npos) {
+        result = std::regex_replace(result, patternl, "$&\\frac{d^4q}{(2\\pi)^4}");
+    }
+    if (result.find('u') != std::string::npos) {
+        result = std::regex_replace(result, patternq, "$&\\frac{d^4u}{(2\\pi)^4}");
+    }
+    if (result.find('s') != std::string::npos) {
+        result = std::regex_replace(result, patternu, "$&\\frac{d^4s}{(2\\pi)^4}");
+    }
+    if (result.find('w') != std::string::npos) {
+        result = std::regex_replace(result, patterns, "$&\\frac{d^4w}{(2\\pi)^4}");
+    }
+
+    return result;
 }
 
 void Go_To_LaTeX(std::string str) {
@@ -132,11 +149,11 @@ void Go_To_LaTeX(std::string str) {
         "{\\phi}^{*}_{argument1}(argument2,\\theta)",
         "\\tilde{\\phi}_{argument1}(argument2,\\theta)",
         "{V}_{argument1}(argument2)",
-        "\\frac{1}{{argument1}^{argument2}}",
+        "\\frac{1}{argument1^{argument2}}",
         "{argument1}^{argument2}",
         "{argument1}_{argument2}",
-        "\\frac{1}{{argument1}^2+M^2}",
-        "\\frac{M}{{argument1}^2+M^2}",
+        "\\frac{1}{argument1^2+M^2}",
+        "\\frac{M}{argument1^2+M^2}",
         "\\frac{{\\xi}_0}{K_{argument1}}",
         "\\frac{1}{R_{argument1}}"
     };
@@ -193,11 +210,11 @@ void Go_To_LaTeX(std::string str) {
                     // Taking into account the correct order of inserting arguments into LaTeX templates
                     if (i == 0 || i == 2 || i == 3 || i == 4 || i == 5) {
                         argument1 = result[2];
-                        argument2 = Decode_Number(result[4], argument1, i);
+                        argument2 = Decode_Number(result[4]);
                     }
                     else {
+                        argument1 = Decode_Number(result[2]);
                         argument2 = result[4];
-                        argument1 = Decode_Number(result[2], argument2, i);
                     }
                     // An array whose elements represent the values with which to replace the arguments in the LaTeX template
                     std::string newParams[]{ argument1, argument2 };
@@ -231,7 +248,7 @@ void Go_To_LaTeX(std::string str) {
     }
 
     // Inferences
-    std::cout << "Формат LaTeX:\n" << "$" + str + "$\n" << std::endl;
+    std::cout << "Формат LaTeX:\n" << "$" + Add_Puls_Integrals(str) + "$\n" << std::endl;
 
     std::cout << "Заменено выражений: " << count << "\n" << std::endl;
 
