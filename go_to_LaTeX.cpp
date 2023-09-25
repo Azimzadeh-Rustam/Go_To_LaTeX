@@ -6,13 +6,13 @@
 
 using namespace std;
 
-const map<char, int> variableToCode{
-    {'k', 2},
-    {'v', 3},
-    {'q', 5},
-    {'j', 7},
-    {'s', 11},
-    {'w', 13}
+const std::map<char, int> pulseToDigit{
+    {'K', 2},
+    {'L', 3},
+    {'Q', 5},
+    {'U', 7},
+    {'O', 11},
+    {'I', 13}
 };
 
 // Regular expressions for searching
@@ -98,12 +98,12 @@ std::string Decode_Number(std::string str) {
     // Factoring a number into prime factors
     std::vector<int> primeFactors;
     int currentCode(num);
-    for (const auto& pair : variableToCode) {
-        char variable(pair.first);
-        int code(pair.second);
-        while (currentCode % code == 0) {
-            primeFactors.push_back(code);
-            currentCode /= code;
+    for (const auto& pair : pulseToDigit) {
+        char pulse(pair.first);
+        int digit(pair.second);
+        while (currentCode % digit == 0) {
+            primeFactors.push_back(digit);
+            currentCode /= digit;
         }
     }
 
@@ -111,14 +111,14 @@ std::string Decode_Number(std::string str) {
     int primeFactorsSize(primeFactors.size());
     std::string analyticalRepresentation;
     for (size_t i = 0; i < primeFactorsSize; ++i) {
-        char variable;
-        for (const auto& pair : variableToCode) {
+        char pulse;
+        for (const auto& pair : pulseToDigit) {
             if (pair.second == primeFactors[i]) {
-                variable = pair.first;
+                pulse = pair.first;
                 break;
             }
         }
-        analyticalRepresentation += variable;
+        analyticalRepresentation += pulse;
         if (i < primeFactorsSize - 1) {
             analyticalRepresentation += " + ";
         }
@@ -143,7 +143,7 @@ std::string Add_Pulse_Integrals(const std::string& input) {
 
     result = std::regex_replace(result, std::regex("\\{e\\}\\^\\{-?\\d+\\}"), "$&\\int{}d^4\\theta");
 
-    for (const auto& pair : variableToCode) {
+    for (const auto& pair : pulseToDigit) {
         char pulse = pair.first;
         if (result.find(pulse) != std::string::npos) {
             std::string pulseFrac("\\frac{d^4" + std::string(1, pulse) + "}{(2\\pi)^4}$&");
@@ -176,7 +176,7 @@ void Go_To_LaTeX(std::string str) {
             regex_iterator++;
         }
 
-        if (expressions.size() > 0) {
+        if (!expressions.empty()) {
             std::sort(expressions.begin(), expressions.end()); // Sort the expressions vector to group repeating elements
             expressions.erase(std::unique(expressions.begin(), expressions.end()), expressions.end()); // Removing duplicates
 
@@ -188,8 +188,7 @@ void Go_To_LaTeX(std::string str) {
                     // An array whose elements represent the arguments in the LaTeX template to be replaced
                     std::string params[]{ "argument1", "argument2" };
 
-                    std::string argument1;
-                    std::string argument2;
+                    std::string argument1, argument2;
                     // Taking into account the correct order of inserting arguments into LaTeX templates
                     if (i == 0 || i == 2 || i == 3 || i == 4 || i == 5) {
                         argument1 = result[1];
