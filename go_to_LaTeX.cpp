@@ -15,7 +15,7 @@ std::string Remove_Hyphens_And_Spaces(const std::string& input) {
 }
 
 std::string Replace_Stars_With_Cdots(const std::string& input) {
-    std::string result = input;
+    std::string result(input);
     size_t pos = result.find('*');
     while (pos != std::string::npos) {
         result.replace(pos, 1, "\\cdot");
@@ -36,21 +36,22 @@ std::string Decode_Number(std::string str) {
     int num = std::stoi(str);
 
     // Encoding variables and their values as pairs (variable, code)
-    std::map<char, int> variableToCode = {
+    // k v q j s w y z b
+    std::map<char, int> variableToCode{
         {'k', 2},
-        {'l', 3},
+        {'v', 3},
         {'q', 5},
-        {'u', 7},
+        {'j', 7},
         {'s', 11},
         {'w', 13}
     };
 
     // Factoring a number into prime factors
     std::vector<int> primeFactors;
-    int currentCode = num;
+    int currentCode(num);
     for (const auto& pair : variableToCode) {
-        char variable = pair.first;
-        int code = pair.second;
+        char variable(pair.first);
+        int code(pair.second);
         while (currentCode % code == 0) {
             primeFactors.push_back(code);
             currentCode /= code;
@@ -58,7 +59,7 @@ std::string Decode_Number(std::string str) {
     }
 
     // Generating an analytical view as a string
-    int primeFactorsSize = primeFactors.size();
+    int primeFactorsSize(primeFactors.size());
     std::string analyticalRepresentation;
     for (size_t i = 0; i < primeFactorsSize; ++i) {
         char variable;
@@ -88,34 +89,25 @@ std::string Decode_Number(std::string str) {
     }
 }
 
-std::string Add_Puls_Integrals(const std::string& input) {
-    std::string result = input;
-    std::regex patterne("\\{e\\}\\^\\{-?\\d+\\}");
-    std::regex patternk("\\\\frac\\{d\\^4k\\}\\{\\(2\\\\pi\\)\\^4\\}");
-    std::regex patternl("\\\\frac\\{d\\^4l\\}\\{\\(2\\\\pi\\)\\^4\\}");
-    std::regex patternq("\\\\frac\\{d\\^4q\\}\\{\\(2\\\\pi\\)\\^4\\}");
-    std::regex patternu("\\\\frac\\{d\\^4u\\}\\{\\(2\\\\pi\\)\\^4\\}");
-    std::regex patterns("\\\\frac\\{d\\^4s\\}\\{\\(2\\\\pi\\)\\^4\\}");
+std::string Add_Pulse_Integrals(const std::string& input) {
+    std::string result(input);
+    std::vector<char> pulses{ 'k', 'v', 'q', 'j', 's', 'w' };
 
     if (result.find('k') != std::string::npos) {
-        result = std::regex_replace(result, patterne, "$&\\int{\\frac{d^4k}{(2\\pi)^4}}d^4\\theta");
-    }
-    if (result.find('l') != std::string::npos) {
-        result = std::regex_replace(result, patternk, "$&\\frac{d^4l}{(2\\pi)^4}");
-    }
-    if (result.find('q') != std::string::npos) {
-        result = std::regex_replace(result, patternl, "$&\\frac{d^4q}{(2\\pi)^4}");
-    }
-    if (result.find('u') != std::string::npos) {
-        result = std::regex_replace(result, patternq, "$&\\frac{d^4u}{(2\\pi)^4}");
-    }
-    if (result.find('s') != std::string::npos) {
-        result = std::regex_replace(result, patternu, "$&\\frac{d^4s}{(2\\pi)^4}");
-    }
-    if (result.find('w') != std::string::npos) {
-        result = std::regex_replace(result, patterns, "$&\\frac{d^4w}{(2\\pi)^4}");
+        std::regex ePattern("\\{e\\}\\^\\{-?\\d+\\}");
+        result = std::regex_replace(result, ePattern, "$&\\int{\\frac{d^4k}{(2\\pi)^4}}d^4\\theta");
     }
 
+    for (int i = 1; i < pulses.size(); i++) {
+        char currentPulse(pulses[i]);
+        char prevPulse(pulses[i - 1]);
+
+        if (result.find(currentPulse) != std::string::npos) {
+            std::string prevFrac("\\\\frac\\{d\\^4" + std::string(1, prevPulse) + "\\}\\{\\(2\\\\pi\\)\\^4\\}");
+            std::string currentFrac("$&\\frac{d^4" + std::string(1, currentPulse) + "}{(2\\pi)^4}");
+            result = std::regex_replace(result, std::regex(prevFrac), currentFrac);
+        }
+    }
     return result;
 }
 
@@ -125,24 +117,24 @@ void Go_To_LaTeX(std::string str) {
     std::vector<std::string> warnings; // A vector for storing the names of expressions that were not found in the source string
 
     // Regular expressions for searching
-    std::vector<std::string> searchPatterns = {
-        "(e\\^)(-?\\d+)",                              //0
-        "(d_\\{)(-?\\d+)(\\}\\{)(-?\\d+)(\\})",        //1
-        "(F_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})",  //2
-        "(F#_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})", //3
-        "(F1_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})", //4
-        "(V_)(-?\\d+)([\\^_]-?\\d+\\{)(-?\\d+)(\\})",  //5
-        "(I\\{)(-?\\d+)(\\^-)(\\d+)(\\})",             //6
-        "(I\\{)(-?\\d+)(\\^)(\\d+)(\\})",              //7
-        "(I\\{)(-?\\d+)(_)(-?\\d+)(\\})",              //8
-        "(K2[-_\\^\\d+]*?\\{)(-?\\d+)(\\})",           //9
-        "(K3[-_\\^\\d+]*?\\{)(-?\\d+)(\\})",           //10
-        "(K4[-_\\^\\d+]*?\\{)(-?\\d+)(\\})",           //11
-        "(K5[-_\\^\\d+]*?\\{)(-?\\d+)(\\})"            //12
+    std::vector<std::string> searchPatterns{
+        "e\\^(-?\\d+)",                          //0
+        "d_\\{(-?\\d+)\\}\\{(-?\\d+)\\}",        //1
+        "F_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}",  //2
+        "F#_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}", //3
+        "F1_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}", //4
+        "V_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}",  //5
+        "I\\{(-?\\d+)\\^-(\\d+)\\}",             //6
+        "I\\{(-?\\d+)\\^(\\d+)\\}",              //7
+        "I\\{(-?\\d+)_(-?\\d+)\\}",              //8
+        "K2[-_\\^\\d+]*?\\{(-?\\d+)\\}",         //9
+        "K3[-_\\^\\d+]*?\\{(-?\\d+)\\}",         //10
+        "K4[-_\\^\\d+]*?\\{(-?\\d+)\\}",         //11
+        "K5[-_\\^\\d+]*?\\{(-?\\d+)\\}"          //12
     };
 
     // LaTeX templates
-    std::vector<std::string> LaTeXSamples = {
+    std::vector<std::string> LaTeXSamples{
         "{e}^{argument1}",
         "{\\delta}^8_{argument2}(argument1)",
         "{\\phi}_{argument1}(argument2,\\theta)",
@@ -159,7 +151,7 @@ void Go_To_LaTeX(std::string str) {
     };
 
     // Titles
-    std::vector<std::string> designations = {
+    std::vector<std::string> designations{
         "Констант связи",
         "Дельта функции",
         "Киральных полей",
@@ -209,12 +201,12 @@ void Go_To_LaTeX(std::string str) {
                     std::string argument2;
                     // Taking into account the correct order of inserting arguments into LaTeX templates
                     if (i == 0 || i == 2 || i == 3 || i == 4 || i == 5) {
-                        argument1 = result[2];
-                        argument2 = Decode_Number(result[4]);
+                        argument1 = result[1];
+                        argument2 = Decode_Number(result[2]);
                     }
                     else {
-                        argument1 = Decode_Number(result[2]);
-                        argument2 = result[4];
+                        argument1 = Decode_Number(result[1]);
+                        argument2 = result[2];
                     }
                     // An array whose elements represent the values with which to replace the arguments in the LaTeX template
                     std::string newParams[]{ argument1, argument2 };
@@ -248,7 +240,7 @@ void Go_To_LaTeX(std::string str) {
     }
 
     // Inferences
-    std::cout << "Формат LaTeX:\n" << "$" + Add_Puls_Integrals(str) + "$\n" << std::endl;
+    std::cout << "Формат LaTeX:\n" << "$" + Add_Pulse_Integrals(str) + "$\n" << std::endl;
 
     std::cout << "Заменено выражений: " << count << "\n" << std::endl;
 
@@ -265,7 +257,7 @@ int main() {
     setlocale(LC_ALL, "ru");
 
     // Source string
-    std::string programFormat = "-8*e^8*F_1_1{1}*F#_1^2{-1}*K4{2}*I{2^-4}*K4{5}*I{5^-2}*K4{7}*I{7^-2}*K4{3}*I{3^-2}*I{210^-2}*I{10^-2}*I{30^-2}";
+    std::string programFormat("-8*e^8*F_1_1{1}*F#_1^2{-1}*K4{2}*I{2^-4}*K4{5}*I{5^-2}*K4{7}*I{7^-2}*K4{3}*I{3^-2}*I{210^-2}*I{10^-2}*I{30^-2}");
 
     Go_To_LaTeX(programFormat);
 
