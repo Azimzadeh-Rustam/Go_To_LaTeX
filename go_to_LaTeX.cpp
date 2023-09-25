@@ -6,6 +6,66 @@
 
 using namespace std;
 
+const map<char, int> variableToCode{
+    {'k', 2},
+    {'v', 3},
+    {'q', 5},
+    {'j', 7},
+    {'s', 11},
+    {'w', 13}
+};
+
+// Regular expressions for searching
+std::vector<std::string> searchPatterns{
+    "e\\^(-?\\d+)",                          //0
+    "d_\\{(-?\\d+)\\}\\{(-?\\d+)\\}",        //1
+    "F_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}",  //2
+    "F#_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}", //3
+    "F1_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}", //4
+    "V_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}",  //5
+    "I\\{(-?\\d+)\\^-(\\d+)\\}",             //6
+    "I\\{(-?\\d+)\\^(\\d+)\\}",              //7
+    "I\\{(-?\\d+)_(-?\\d+)\\}",              //8
+    "K2[-_\\^\\d+]*?\\{(-?\\d+)\\}",         //9
+    "K3[-_\\^\\d+]*?\\{(-?\\d+)\\}",         //10
+    "K4[-_\\^\\d+]*?\\{(-?\\d+)\\}",         //11
+    "K5[-_\\^\\d+]*?\\{(-?\\d+)\\}"          //12
+};
+
+// LaTeX templates
+std::vector<std::string> LaTeXSamples{
+    "{e}^{argument1}",
+    "{\\delta}^8_{argument2}(argument1)",
+    "{\\phi}_{argument1}(argument2,\\theta)",
+    "{\\phi}^{*}_{argument1}(argument2,\\theta)",
+    "\\tilde{\\phi}_{argument1}(argument2,\\theta)",
+    "{V}_{argument1}(argument2)",
+    "\\frac{1}{argument1^{argument2}}",
+    "{argument1}^{argument2}",
+    "{argument1}_{argument2}",
+    "\\frac{1}{argument1^2+M^2}",
+    "\\frac{M}{argument1^2+M^2}",
+    "\\frac{{\\xi}_0}{K_{argument1}}",
+    "\\frac{1}{R_{argument1}}"
+};
+
+// Titles
+std::vector<std::string> designations{
+    "Констант связи",
+    "Дельта функции",
+    "Киральных полей",
+    "Сопряжённых киральных полей",
+    "Киральных полей с тильдой",
+    "Вещественных полей",
+    "Дробных констант",
+    "Степенных констант",
+    "Констант с нижним индексом",
+    "Констант типа 2",
+    "Констант типа 3",
+    "Констант типа 4",
+    "Констант типа 5"
+};
+
 std::string Remove_Hyphens_And_Spaces(const std::string& input) {
     std::string result = input;
     result.erase(std::remove_if(result.begin(), result.end(), [](char c) {
@@ -26,7 +86,7 @@ std::string Replace_Stars_With_Cdots(const std::string& input) {
 
 std::string Decode_Number(std::string str) {
 
-    if (str == "") {
+    if (str.empty()) {
         return "";
     }
     else if (str == "1" || str == "-1") {
@@ -34,17 +94,6 @@ std::string Decode_Number(std::string str) {
     }
 
     int num = std::stoi(str);
-
-    // Encoding variables and their values as pairs (variable, code)
-    // k v q j s w y z b
-    std::map<char, int> variableToCode{
-        {'k', 2},
-        {'v', 3},
-        {'q', 5},
-        {'j', 7},
-        {'s', 11},
-        {'w', 13}
-    };
 
     // Factoring a number into prime factors
     std::vector<int> primeFactors;
@@ -91,21 +140,14 @@ std::string Decode_Number(std::string str) {
 
 std::string Add_Pulse_Integrals(const std::string& input) {
     std::string result(input);
-    std::vector<char> pulses{ 'k', 'v', 'q', 'j', 's', 'w' };
 
-    if (result.find('k') != std::string::npos) {
-        std::regex ePattern("\\{e\\}\\^\\{-?\\d+\\}");
-        result = std::regex_replace(result, ePattern, "$&\\int{\\frac{d^4k}{(2\\pi)^4}}d^4\\theta");
-    }
+    result = std::regex_replace(result, std::regex("\\{e\\}\\^\\{-?\\d+\\}"), "$&\\int{}d^4\\theta");
 
-    for (int i = 1; i < pulses.size(); i++) {
-        char currentPulse(pulses[i]);
-        char prevPulse(pulses[i - 1]);
-
-        if (result.find(currentPulse) != std::string::npos) {
-            std::string prevFrac("\\\\frac\\{d\\^4" + std::string(1, prevPulse) + "\\}\\{\\(2\\\\pi\\)\\^4\\}");
-            std::string currentFrac("$&\\frac{d^4" + std::string(1, currentPulse) + "}{(2\\pi)^4}");
-            result = std::regex_replace(result, std::regex(prevFrac), currentFrac);
+    for (const auto& pair : variableToCode) {
+        char pulse = pair.first;
+        if (result.find(pulse) != std::string::npos) {
+            std::string pulseFrac("\\frac{d^4" + std::string(1, pulse) + "}{(2\\pi)^4}$&");
+            result = std::regex_replace(result, std::regex("\\}d\\^4\\\\theta"), pulseFrac);
         }
     }
     return result;
@@ -115,57 +157,6 @@ void Go_To_LaTeX(std::string str) {
 
     int count = 0; // Substitution counter
     std::vector<std::string> warnings; // A vector for storing the names of expressions that were not found in the source string
-
-    // Regular expressions for searching
-    std::vector<std::string> searchPatterns{
-        "e\\^(-?\\d+)",                          //0
-        "d_\\{(-?\\d+)\\}\\{(-?\\d+)\\}",        //1
-        "F_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}",  //2
-        "F#_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}", //3
-        "F1_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}", //4
-        "V_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}",  //5
-        "I\\{(-?\\d+)\\^-(\\d+)\\}",             //6
-        "I\\{(-?\\d+)\\^(\\d+)\\}",              //7
-        "I\\{(-?\\d+)_(-?\\d+)\\}",              //8
-        "K2[-_\\^\\d+]*?\\{(-?\\d+)\\}",         //9
-        "K3[-_\\^\\d+]*?\\{(-?\\d+)\\}",         //10
-        "K4[-_\\^\\d+]*?\\{(-?\\d+)\\}",         //11
-        "K5[-_\\^\\d+]*?\\{(-?\\d+)\\}"          //12
-    };
-
-    // LaTeX templates
-    std::vector<std::string> LaTeXSamples{
-        "{e}^{argument1}",
-        "{\\delta}^8_{argument2}(argument1)",
-        "{\\phi}_{argument1}(argument2,\\theta)",
-        "{\\phi}^{*}_{argument1}(argument2,\\theta)",
-        "\\tilde{\\phi}_{argument1}(argument2,\\theta)",
-        "{V}_{argument1}(argument2)",
-        "\\frac{1}{argument1^{argument2}}",
-        "{argument1}^{argument2}",
-        "{argument1}_{argument2}",
-        "\\frac{1}{argument1^2+M^2}",
-        "\\frac{M}{argument1^2+M^2}",
-        "\\frac{{\\xi}_0}{K_{argument1}}",
-        "\\frac{1}{R_{argument1}}"
-    };
-
-    // Titles
-    std::vector<std::string> designations{
-        "Констант связи",
-        "Дельта функции",
-        "Киральных полей",
-        "Сопряжённых киральных полей",
-        "Киральных полей с тильдой",
-        "Вещественных полей",
-        "Дробных констант",
-        "Степенных констант",
-        "Констант с нижним индексом",
-        "Констант типа 2",
-        "Констант типа 3",
-        "Констант типа 4",
-        "Констант типа 5"
-    };
 
     str = Remove_Hyphens_And_Spaces(str);
     str = Replace_Stars_With_Cdots(str);
