@@ -6,7 +6,7 @@
 
 using namespace std;
 
-const std::map<char, int> pulseToDigit{
+const std::map<char, int> PULSE_TO_DIGIT{
     {'K', 2},
     {'L', 3},
     {'Q', 5},
@@ -16,13 +16,13 @@ const std::map<char, int> pulseToDigit{
 };
 
 // Regular expressions for searching
-std::vector<std::string> searchPatterns{
+const std::vector<std::string> SEARCH_PATTERNS{
     "e\\^(-?\\d+)",                          //0
-    "d_\\{(-?\\d+)\\}\\{(-?\\d+)\\}",        //1
-    "F_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}",  //2
-    "F#_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}", //3
-    "F1_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}", //4
-    "V_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}",  //5
+    "F_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}",  //1
+    "F#_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}", //2
+    "F1_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}", //3
+    "V_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}",  //4
+    "d_\\{(-?\\d+)\\}\\{(-?\\d+)\\}",        //5
     "I\\{(-?\\d+)\\^-(\\d+)\\}",             //6
     "I\\{(-?\\d+)\\^(\\d+)\\}",              //7
     "I\\{(-?\\d+)_(-?\\d+)\\}",              //8
@@ -33,13 +33,13 @@ std::vector<std::string> searchPatterns{
 };
 
 // LaTeX templates
-std::vector<std::string> LaTeXSamples{
+const std::vector<std::string> LATEX_SAMPLES{
     "{e}^{argument1}",
-    "{\\delta}^8_{argument2}(argument1)",
     "{\\phi}_{argument1}(argument2,\\theta)",
     "{\\phi}^{*}_{argument1}(argument2,\\theta)",
     "\\tilde{\\phi}_{argument1}(argument2,\\theta)",
     "{V}_{argument1}(argument2)",
+    "{\\delta}^8_{argument2}(argument1)",
     "\\frac{1}{argument1^{argument2}}",
     "{argument1}^{argument2}",
     "{argument1}_{argument2}",
@@ -50,13 +50,13 @@ std::vector<std::string> LaTeXSamples{
 };
 
 // Titles
-std::vector<std::string> designations{
+const std::vector<std::string> DESIGNATIONS{
     "Констант связи",
-    "Дельта функции",
     "Киральных полей",
     "Сопряжённых киральных полей",
     "Киральных полей с тильдой",
     "Вещественных полей",
+    "Дельта функции",
     "Дробных констант",
     "Степенных констант",
     "Констант с нижним индексом",
@@ -66,7 +66,7 @@ std::vector<std::string> designations{
     "Констант типа 5"
 };
 
-std::string Remove_Hyphens_And_Spaces(const std::string& input) {
+std::string RemoveHyphensAndSpaces(const std::string& input) {
     std::string result = input;
     result.erase(std::remove_if(result.begin(), result.end(), [](char c) {
         return std::isspace(c);
@@ -74,7 +74,7 @@ std::string Remove_Hyphens_And_Spaces(const std::string& input) {
     return result;
 }
 
-std::string Replace_Stars_With_Cdots(const std::string& input) {
+std::string ReplaceStarsWithCdots(const std::string& input) {
     std::string result(input);
     size_t pos = result.find('*');
     while (pos != std::string::npos) {
@@ -84,90 +84,91 @@ std::string Replace_Stars_With_Cdots(const std::string& input) {
     return result;
 }
 
-std::string Decode_Number(std::string str) {
+std::string DecodeNumber(std::string input) {
 
-    if (str.empty()) {
+    if (input.empty()) {
         return "";
     }
-    else if (str == "1" || str == "-1") {
+    else if (input == "1" || input == "-1") {
         return "0";
     }
 
-    int num = std::stoi(str);
+    int number = std::stoi(input);
 
     // Factoring a number into prime factors
-    std::vector<int> primeFactors;
-    int currentCode(num);
-    for (const auto& pair : pulseToDigit) {
+    std::vector<int> prime_factors;
+    int current_code(number);
+    for (const auto& pair : PULSE_TO_DIGIT) {
         char pulse(pair.first);
         int digit(pair.second);
-        while (currentCode % digit == 0) {
-            primeFactors.push_back(digit);
-            currentCode /= digit;
+        while (current_code % digit == 0) {
+            prime_factors.push_back(digit);
+            current_code /= digit;
         }
     }
 
     // Generating an analytical view as a string
-    int primeFactorsSize(primeFactors.size());
-    std::string analyticalRepresentation;
-    for (size_t i = 0; i < primeFactorsSize; ++i) {
+    int prime_factors_size(prime_factors.size());
+    std::string analytical_representation;
+    for (size_t i = 0; i < prime_factors_size; ++i) {
         char pulse;
-        for (const auto& pair : pulseToDigit) {
-            if (pair.second == primeFactors[i]) {
+        for (const auto& pair : PULSE_TO_DIGIT) {
+            if (pair.second == prime_factors[i]) {
                 pulse = pair.first;
                 break;
             }
         }
-        analyticalRepresentation += pulse;
-        if (i < primeFactorsSize - 1) {
-            analyticalRepresentation += " + ";
+        analytical_representation += pulse;
+        if (i < prime_factors_size - 1) {
+            analytical_representation += " + ";
         }
     }
 
-    if (num < 0 && primeFactorsSize > 1) {
-        return "-(" + analyticalRepresentation + ")";
+    if (number < 0 && prime_factors_size > 1) {
+        return "-(" + analytical_representation + ")";
     }
-    else if (num > 0 && primeFactorsSize > 1) {
-        return "(" + analyticalRepresentation + ")";
+    else if (number > 0 && prime_factors_size > 1) {
+        return "(" + analytical_representation + ")";
     }
-    else if (num < 0) {
-        return "-" + analyticalRepresentation;
+    else if (number < 0) {
+        return "-" + analytical_representation;
     }
     else {
-        return analyticalRepresentation;
+        return analytical_representation;
     }
 }
 
-std::string Add_Pulse_Integrals(const std::string& input) {
+std::string AddPulseIntegrals(const std::string& input) {
     std::string result(input);
 
     result = std::regex_replace(result, std::regex("\\{e\\}\\^\\{-?\\d+\\}"), "$&\\int{}d^4\\theta");
 
-    for (const auto& pair : pulseToDigit) {
+    for (const auto& pair : PULSE_TO_DIGIT) {
         char pulse = pair.first;
         if (result.find(pulse) != std::string::npos) {
-            std::string pulseFrac("\\frac{d^4" + std::string(1, pulse) + "}{(2\\pi)^4}$&");
-            result = std::regex_replace(result, std::regex("\\}d\\^4\\\\theta"), pulseFrac);
+            std::string pulse_frac("\\frac{d^4" + std::string(1, pulse) + "}{(2\\pi)^4}$&");
+            result = std::regex_replace(result, std::regex("\\}d\\^4\\\\theta"), pulse_frac);
         }
     }
     return result;
 }
 
-void Go_To_LaTeX(std::string str) {
+void GoToLaTeX(std::string input) {
 
     int count = 0; // Substitution counter
+    int reverse_order_index = 5;
     std::vector<std::string> warnings; // A vector for storing the names of expressions that were not found in the source string
 
-    str = Remove_Hyphens_And_Spaces(str);
-    str = Replace_Stars_With_Cdots(str);
+    input = RemoveHyphensAndSpaces(input);
+    input = ReplaceStarsWithCdots(input);
 
-    for (int i = 0; i < searchPatterns.size(); i++) {
+    for (int i = 0; i < SEARCH_PATTERNS.size(); i++) {
         std::vector<std::string> expressions; // Vector for storing found expressions
-        std::vector<std::string> LaTeXExpressions; // Vector for storing found expressions in LaTeX format
+        std::vector<std::string> LaTeX_expressions; // Vector for storing found expressions in LaTeX format
         size_t pos = 0;
         std::cmatch result; // This variable, after executing the code, will be an array, the zeroth element of which will be the found expression itself, and all the rest will correspond to the partitions in the regular expression
-        std::regex regular(searchPatterns[i]); // Regular expression
-        std::sregex_iterator regex_iterator(str.begin(), str.end(), regular); // Iterator to find all given expressions
+        std::regex regular(SEARCH_PATTERNS[i]); // Regular expression
+        std::sregex_iterator regex_iterator(input.begin(), input.end(), regular); // Iterator to find all given expressions
 
         // Loop through all given expressions and add them to the expressions vector
         std::sregex_iterator end_iterator;
@@ -180,64 +181,64 @@ void Go_To_LaTeX(std::string str) {
             std::sort(expressions.begin(), expressions.end()); // Sort the expressions vector to group repeating elements
             expressions.erase(std::unique(expressions.begin(), expressions.end()), expressions.end()); // Removing duplicates
 
-            // Generate LaTeX syntax for given expressions and write them to the LaTeXExpressions vector
+            // Generate LaTeX syntax for given expressions and write them to the LaTeX_expressions vector
             for (int j = 0; j < expressions.size(); j++) {
 
                 if (std::regex_search(expressions[j].c_str(), result, regular)) {
-                    std::string LaTeXTemplate = LaTeXSamples[i];
+                    std::string LaTeX_template = LATEX_SAMPLES[i];
                     // An array whose elements represent the arguments in the LaTeX template to be replaced
                     std::string params[]{ "argument1", "argument2" };
 
                     std::string argument1, argument2;
                     // Taking into account the correct order of inserting arguments into LaTeX templates
-                    if (i == 0 || i == 2 || i == 3 || i == 4 || i == 5) {
+                    if (i < reverse_order_index) {
                         argument1 = result[1];
-                        argument2 = Decode_Number(result[2]);
+                        argument2 = DecodeNumber(result[2]);
                     }
                     else {
-                        argument1 = Decode_Number(result[1]);
+                        argument1 = DecodeNumber(result[1]);
                         argument2 = result[2];
                     }
                     // An array whose elements represent the values with which to replace the arguments in the LaTeX template
-                    std::string newParams[]{ argument1, argument2 };
+                    std::string new_params[]{ argument1, argument2 };
 
                     // Substituting values into corresponding arguments in a LaTeX template
                     for (int k = 0; k < std::size(params); k++) {
                         pos = 0;
-                        while ((pos = LaTeXTemplate.find(params[k], pos)) != std::string::npos) {
-                            LaTeXTemplate.replace(pos, params[k].length(), newParams[k]);
-                            pos += newParams[k].length();
+                        while ((pos = LaTeX_template.find(params[k], pos)) != std::string::npos) {
+                            LaTeX_template.replace(pos, params[k].length(), new_params[k]);
+                            pos += new_params[k].length();
                         }
                     }
-                    // Writing received LaTeX expressions into the LaTeXExpressions vector
-                    LaTeXExpressions.push_back(LaTeXTemplate);
+                    // Writing received LaTeX expressions into the LaTeX_expressions vector
+                    LaTeX_expressions.push_back(LaTeX_template);
                 }
             }
 
             // Replace all given expressions with LaTeX format in the source string
             for (int n = 0; n < std::size(expressions); n++) {
                 pos = 0;
-                while ((pos = str.find(expressions[n], pos)) != std::string::npos) {
-                    str.replace(pos, expressions[n].length(), LaTeXExpressions[n]);
-                    pos += LaTeXExpressions[n].length();
+                while ((pos = input.find(expressions[n], pos)) != std::string::npos) {
+                    input.replace(pos, expressions[n].length(), LaTeX_expressions[n]);
+                    pos += LaTeX_expressions[n].length();
                     count++;
                 }
             }
         }
         else {
-            warnings.push_back(designations[i]);
+            warnings.push_back(DESIGNATIONS[i]);
         }
     }
 
     // Inferences
-    std::cout << "Формат LaTeX:\n" << "$" + Add_Pulse_Integrals(str) + "$\n" << std::endl;
+    std::cout << "Формат LaTeX:\n" << "$" + AddPulseIntegrals(input) + "$\n" << std::endl;
 
     std::cout << "Заменено выражений: " << count << "\n" << std::endl;
 
-    int warningsSize = warnings.size();
-    if (warningsSize > 0) {
+    int warnings_size = warnings.size();
+    if (warnings_size > 0) {
         std::cout << "В исходном коде не было найдено:\n";
-        for (int i = 0; i < warningsSize; i++) {
+        for (int i = 0; i < warnings_size; i++) {
             std::cout << i + 1 << ". " << warnings[i] << std::endl;
         }
     }
@@ -247,9 +248,9 @@ int main() {
     setlocale(LC_ALL, "ru");
 
     // Source string
-    std::string programFormat("-8*e^8*F_1_1{1}*F#_1^2{-1}*K4{2}*I{2^-4}*K4{5}*I{5^-2}*K4{7}*I{7^-2}*K4{3}*I{3^-2}*I{210^-2}*I{10^-2}*I{30^-2}");
+    std::string program_format("-8*e^8*F_1_1{1}*F#_1^2{-1}*K4{2}*I{2^-4}*K4{5}*I{5^-2}*K4{7}*I{7^-2}*K4{3}*I{3^-2}*I{210^-2}*I{10^-2}*I{30^-2}");
 
-    Go_To_LaTeX(programFormat);
+    GoToLaTeX(program_format);
 
     return 0;
 }
