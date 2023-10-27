@@ -16,7 +16,7 @@ const std::map<char, int> PULSE_TO_DIGIT{
 };
 
 // Regular expressions for searching
-const std::vector<std::string> SEARCH_PATTERNS{
+const std::string SEARCH_PATTERNS[] {
     "e\\^(-?\\d+)",                          //0
     "F_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}",  //1
     "F#_(-?\\d+)[\\^_]-?\\d+\\{(-?\\d+)\\}", //2
@@ -33,7 +33,7 @@ const std::vector<std::string> SEARCH_PATTERNS{
 };
 
 // LaTeX templates
-const std::vector<std::string> LATEX_SAMPLES{
+const std::string LATEX_SAMPLES[] {
     "{e}^{argument1}",
     "{\\phi}_{argument1}(argument2,\\theta)",
     "{\\phi}^{*}_{argument1}(argument2,\\theta)",
@@ -50,7 +50,7 @@ const std::vector<std::string> LATEX_SAMPLES{
 };
 
 // Titles
-const std::vector<std::string> DESIGNATIONS{
+const std::string DESIGNATIONS[] {
     "Констант связи",
     "Киральных полей",
     "Сопряжённых киральных полей",
@@ -155,14 +155,14 @@ std::string AddPulseIntegrals(const std::string& input) {
 
 void GoToLaTeX(std::string input) {
 
+    const int REVERSE_ORDER_INDEX = 5;
     int count = 0; // Substitution counter
-    int reverse_order_index = 5;
     std::vector<std::string> warnings; // A vector for storing the names of expressions that were not found in the source string
 
     input = RemoveHyphensAndSpaces(input);
     input = ReplaceStarsWithCdots(input);
 
-    for (int i = 0; i < SEARCH_PATTERNS.size(); i++) {
+    for (int i = 0; i < size(SEARCH_PATTERNS); i++) {
         std::vector<std::string> expressions; // Vector for storing found expressions
         std::vector<std::string> LaTeX_expressions; // Vector for storing found expressions in LaTeX format
         size_t pos = 0;
@@ -191,7 +191,7 @@ void GoToLaTeX(std::string input) {
 
                     std::string argument1, argument2;
                     // Taking into account the correct order of inserting arguments into LaTeX templates
-                    if (i < reverse_order_index) {
+                    if (i < REVERSE_ORDER_INDEX) {
                         argument1 = result[1];
                         argument2 = DecodeNumber(result[2]);
                     }
